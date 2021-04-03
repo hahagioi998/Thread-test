@@ -1,8 +1,8 @@
 package cn.beichenhpy.order.controller;
 
 import cn.beichenhpy.order.entity.Order;
+import cn.beichenhpy.order.service.OrderCallable;
 import cn.beichenhpy.order.service.OrderRunnable;
-import cn.beichenhpy.order.service.OrderThread;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,16 +27,18 @@ public class OrderController {
             orders =  new LinkedBlockingDeque<>();
             orders.add(order);
             ORDER_QUEUE_MAP.put(order.getName(),orders);
-            //写在这里的话，就只有新建一个队列时才创建一个线程去计算，但是Callable不能while(true)不懂为什么？使用Runnable就可以
-//            Future<Boolean> submit = taskExecutor.submit(new OrderThread(orders));
-//            if (submit.isDone()){
-//                try {
-//                    ok = submit.get();
-//                } catch (InterruptedException | ExecutionException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-            taskExecutor.execute(new OrderRunnable(orders));
+            //写在这里的话，就只有新建一个队列时才创建一个线程去计算
+            //Callable while(true)的话，不能return true 否则循环打破了，因此只需要判断 异常停止的情况 即 返回值 = false，成功默认为true
+            Future<Boolean> submit = taskExecutor.submit(new OrderCallable(orders));
+            if (submit.isDone()){
+                try {
+                    ok = submit.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+            //Runnable实现
+            //taskExecutor.execute(new OrderRunnable(orders));
         }
         return String.valueOf(ok);
     }

@@ -9,11 +9,12 @@ import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 @Slf4j
-public class OrderThread implements Callable<Boolean> {
+public class OrderCallable implements Callable<Boolean> {
     private final BlockingQueue<Order> orderQueue;
 
-    public OrderThread(BlockingQueue<Order> orderQueue) {
+    public OrderCallable(BlockingQueue<Order> orderQueue) {
         this.orderQueue = orderQueue;
     }
 
@@ -23,17 +24,18 @@ public class OrderThread implements Callable<Boolean> {
      * @return computed result
      * @throws Exception if unable to compute a result
      */
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public synchronized Boolean call() throws Exception {
-        while (true){
-            Order order = orderQueue.poll(1, TimeUnit.MINUTES);
-            if (order != null){
-                log.warn("计算order:{},时间:{}",order,new Date());
-                return true;
+        try {
+            while (true){
+                log.warn("执行了order:{},时间：{}",orderQueue.poll(1,TimeUnit.MINUTES),new Date());
+                //模拟耗时操作
+                Thread.sleep(100);
             }
-            else {
-                return false;
-            }
+        } catch (InterruptedException e) {
+            log.error(" is interrupted when calculating, will stop...",e);
+            return false; // 注意这里如果不return的话，线程还会继续执行，所以任务超时后在这里处理结果然后返回
         }
     }
 }
