@@ -6,12 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-
 @Slf4j
-public class OrderRunnable implements Runnable{
+public class OrderRunnableLoop implements Runnable{
     private final BlockingQueue<Order> orderQueue;
 
-    public OrderRunnable(BlockingQueue<Order> orderQueue) {
+    public OrderRunnableLoop(BlockingQueue<Order> orderQueue) {
         this.orderQueue = orderQueue;
     }
 
@@ -26,18 +25,21 @@ public class OrderRunnable implements Runnable{
      *
      * @see Thread#run()
      */
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public void run() {
-        Order order = null;
-        try {
-            order = orderQueue.poll(1, TimeUnit.MINUTES);
-            //模拟任务
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            log.warn("线程：{},强制中断",Thread.currentThread().getName());
-        }
-        if (order != null){
-            log.warn("计算order:{},时间:{}",order,new Date());
+        while (true){
+            Order order = null;
+            try {
+                order = orderQueue.poll(1, TimeUnit.MINUTES);
+                //模拟处理业务
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+               log.warn("线程：{},强制中断",Thread.currentThread().getName());
+            }
+            if (order != null){
+                log.warn("计算order:{},时间:{}",order,new Date());
+            }
         }
     }
 }

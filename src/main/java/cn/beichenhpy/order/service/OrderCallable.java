@@ -5,7 +5,6 @@ import cn.beichenhpy.order.entity.Order;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -24,18 +23,16 @@ public class OrderCallable implements Callable<Boolean> {
      * @return computed result
      * @throws Exception if unable to compute a result
      */
-    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public synchronized Boolean call() throws Exception {
-        try {
-            while (true){
-                log.warn("执行了order:{},时间：{}",orderQueue.poll(1,TimeUnit.MINUTES),new Date());
-                //模拟耗时操作
-                Thread.sleep(100);
-            }
-        } catch (InterruptedException e) {
-            log.error(" is interrupted when calculating, will stop...",e);
-            return false; // 注意这里如果不return的话，线程还会继续执行，所以任务超时后在这里处理结果然后返回
+        Order order = orderQueue.poll(1,TimeUnit.MINUTES);
+        if (order != null){
+            log.warn("执行order:{},时间：{}",order,new Date());
+            //模拟任务
+            Thread.sleep(500);
+            return true;
+        }else {
+            return false;
         }
     }
 }
