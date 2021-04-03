@@ -24,14 +24,16 @@ public class OrderThread implements Callable<Boolean> {
      * @throws Exception if unable to compute a result
      */
     @Override
-    public Boolean call() throws Exception {
-        Order order = orderQueue.poll(1, TimeUnit.MINUTES);
-        if (order != null){
-            log.warn("计算order:{},时间:{}",order,new Date());
-            return true;
-        }
-        else {
-            return false;
+    public synchronized Boolean call() throws Exception {
+        while (true){
+            Order order = orderQueue.poll(1, TimeUnit.MINUTES);
+            if (order != null){
+                log.warn("计算order:{},时间:{}",order,new Date());
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     }
 }
