@@ -29,9 +29,12 @@ public class OrderCallableLoop implements Callable<Boolean> {
     public synchronized Boolean call() throws Exception {
         try {
             while (true){
-                log.warn("执行了order:{},时间：{}",orderQueue.poll(1,TimeUnit.MINUTES),new Date());
-                //模拟耗时操作
-                Thread.sleep(500);
+                Order order = orderQueue.poll(1,TimeUnit.MINUTES);
+                if (order != null){
+                    log.warn("执行了order:{},时间：{}",order,new Date());
+                    //模拟耗时操作
+                    Thread.sleep(500);
+                }
             }
         } catch (InterruptedException e) {
             log.warn("线程：{},强制中断",Thread.currentThread().getName());

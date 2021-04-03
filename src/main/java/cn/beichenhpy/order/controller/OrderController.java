@@ -41,8 +41,8 @@ public class OrderController {
              *  [        order-2]  : 执行了order:Order(id=1, name=order2, price=123),时间：Sat Apr 03 14:13:19 CST 2021
              *  [        order-3]  : 执行了order:Order(id=1, name=order3, price=123),时间：Sat Apr 03 14:13:20 CST 2021
              */
-            doRunnable(orders,true);
-            //ok = doCallable(orders,true);
+            //doRunnable(orders,true);
+            ok = doCallable(orders,true);
         }
         /*
          * 写在这里的多线程执行，每条数据都会有新的线程来处理
