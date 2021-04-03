@@ -25,6 +25,7 @@ public class OrderRunnable implements Runnable{
      *
      * @see Thread#run()
      */
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public void run() {
         while (true){
@@ -32,7 +33,7 @@ public class OrderRunnable implements Runnable{
             try {
                 order = orderQueue.poll(1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+               e.printStackTrace();
             }
             if (order != null){
                 log.warn("计算order:{},时间:{}",order,new Date());
