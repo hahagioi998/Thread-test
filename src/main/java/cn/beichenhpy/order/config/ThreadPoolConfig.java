@@ -12,9 +12,9 @@ public class ThreadPoolConfig {
     public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         // 设置线程池核心容量
-        executor.setCorePoolSize(10);
+        executor.setCorePoolSize(50);
         // 设置线程池最大容量
-        executor.setMaxPoolSize(20);
+        executor.setMaxPoolSize(60);
         // 设置任务队列长度
         executor.setQueueCapacity(200);
         // 设置线程超时时间

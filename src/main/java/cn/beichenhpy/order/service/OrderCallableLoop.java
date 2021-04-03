@@ -31,9 +31,9 @@ public class OrderCallableLoop implements Callable<Boolean> {
             while (true){
                 Order order = orderQueue.poll(1,TimeUnit.MINUTES);
                 if (order != null){
-                    log.warn("执行了order:{},时间：{}",order,new Date());
                     //模拟耗时操作
                     Thread.sleep(500);
+                    log.warn("执行了order:{},时间：{}",order,new Date());
                 }
             }
         } catch (InterruptedException e) {

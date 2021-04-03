@@ -27,7 +27,7 @@ public class OrderRunnableLoop implements Runnable{
      */
     @SuppressWarnings("InfiniteLoopStatement")
     @Override
-    public void run() {
+    public synchronized void run() {
         while (true){
             Order order = null;
             try {

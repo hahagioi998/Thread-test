@@ -27,7 +27,7 @@ public class OrderRunnable implements Runnable{
      * @see Thread#run()
      */
     @Override
-    public void run() {
+    public synchronized void run() {
         Order order = null;
         try {
             order = orderQueue.poll(1, TimeUnit.MINUTES);

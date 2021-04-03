@@ -27,9 +27,9 @@ public class OrderCallable implements Callable<Boolean> {
     public synchronized Boolean call() throws Exception {
         Order order = orderQueue.poll(1,TimeUnit.MINUTES);
         if (order != null){
-            log.warn("执行order:{},时间：{}",order,new Date());
             //模拟任务
             Thread.sleep(500);
+            log.warn("执行order:{},时间：{}",order,new Date());
             return true;
         }else {
             return false;
