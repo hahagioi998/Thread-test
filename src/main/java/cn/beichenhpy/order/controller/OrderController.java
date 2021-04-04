@@ -26,20 +26,10 @@ public class OrderController {
         boolean ok = true;
         BlockingQueue<Order> orders = ORDER_QUEUE_MAP.get(order.getName());
         if (orders != null) {
-            try {
-                orders.offer(order,1,TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                log.warn("队列阻塞，添加到队列失败，请记录重试");
-                return false;
-            }
+            doOffer(orders,order);
         } else {
             orders = new LinkedBlockingQueue<>();
-            try {
-                orders.offer(order,1,TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                log.warn("队列阻塞，添加到队列失败，请记录重试");
-                return false;
-            }
+            doOffer(orders,order);
             ORDER_QUEUE_MAP.put(order.getName(), orders);
             /*
              * 写在这里的话，就只有新建一个队列时才创建一个线程去计算 这种需要while(true)
@@ -72,6 +62,22 @@ public class OrderController {
         doRunnable(orders,false);
         //ok = doCallable(orders,false);
         return ok;
+    }
+
+    /**
+     * 进入队列
+     * @param orders 队列
+     * @param order 参数
+     */
+    public void doOffer(BlockingQueue<Order> orders, Order order){
+        try {
+            boolean offerOk = orders.offer(order,1,TimeUnit.MINUTES);
+            if (!offerOk){
+                log.error("队列阻塞，添加到队列失败，请记录重试");
+            }
+        } catch (InterruptedException e) {
+            log.error("服务中断异常");
+        }
     }
 
     /**
