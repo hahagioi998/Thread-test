@@ -5,6 +5,7 @@ import cn.beichenhpy.order.service.OrderCallable;
 import cn.beichenhpy.order.service.OrderCallableLoop;
 import cn.beichenhpy.order.service.OrderRunnable;
 import cn.beichenhpy.order.service.OrderRunnableLoop;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.util.Map;
 import java.util.concurrent.*;
-
+@Slf4j
 @RestController
 public class OrderController {
     public static final Map<String, BlockingQueue<Order>> ORDER_QUEUE_MAP = new ConcurrentHashMap<>();
@@ -21,14 +22,24 @@ public class OrderController {
     private ThreadPoolTaskExecutor taskExecutor;
 
     @PostMapping("/add")
-    public String add(@RequestBody Order order) {
+    public Boolean add(@RequestBody Order order) {
         boolean ok = true;
         BlockingQueue<Order> orders = ORDER_QUEUE_MAP.get(order.getName());
         if (orders != null) {
-            orders.add(order);
+            try {
+                orders.offer(order,1,TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                log.warn("队列阻塞，添加到队列失败，请记录重试");
+                return false;
+            }
         } else {
             orders = new LinkedBlockingQueue<>();
-            orders.add(order);
+            try {
+                orders.offer(order,1,TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                log.warn("队列阻塞，添加到队列失败，请记录重试");
+                return false;
+            }
             ORDER_QUEUE_MAP.put(order.getName(), orders);
             /*
              * 写在这里的话，就只有新建一个队列时才创建一个线程去计算 这种需要while(true)
@@ -60,7 +71,7 @@ public class OrderController {
          */
         doRunnable(orders,false);
         //ok = doCallable(orders,false);
-        return String.valueOf(ok);
+        return ok;
     }
 
     /**
