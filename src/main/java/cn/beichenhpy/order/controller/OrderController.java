@@ -7,6 +7,7 @@ import cn.beichenhpy.order.service.OrderRunnable;
 import cn.beichenhpy.order.service.OrderRunnableLoop;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import java.util.Map;
 import java.util.concurrent.*;
+
 @Slf4j
 @RestController
 public class OrderController {
@@ -22,14 +24,16 @@ public class OrderController {
     private ThreadPoolTaskExecutor taskExecutor;
 
     @PostMapping("/add")
-    public Boolean add(@RequestBody Order order) {
+    public Boolean add(@RequestBody Order order) throws InterruptedException {
         boolean ok = true;
         BlockingQueue<Order> orders = ORDER_QUEUE_MAP.get(order.getName());
         if (orders != null) {
-            doOffer(orders,order);
+            boolean offer = orders.offer(order, 1, TimeUnit.MINUTES);
+            Assert.isTrue(offer, "加入队列失败，队列已满");
         } else {
             orders = new LinkedBlockingQueue<>();
-            doOffer(orders,order);
+            boolean offer = orders.offer(order, 1, TimeUnit.MINUTES);
+            Assert.isTrue(offer, "加入队列失败，队列已满");
             ORDER_QUEUE_MAP.put(order.getName(), orders);
             /*
              * 写在这里的话，就只有新建一个队列时才创建一个线程去计算 这种需要while(true)
@@ -59,25 +63,9 @@ public class OrderController {
          * [        order-9]  : 计算order:Order(id=1, name=order3, price=123),时间:Sat Apr 03 15:15:40 CST 2021
          * [       order-10]  : 计算order:Order(id=1, name=order1, price=12),时间:Sat Apr 03 15:15:40 CST 2021
          */
-        doRunnable(orders,false);
+        doRunnable(orders, false);
         //ok = doCallable(orders,false);
         return ok;
-    }
-
-    /**
-     * 进入队列
-     * @param orders 队列
-     * @param order 参数
-     */
-    public void doOffer(BlockingQueue<Order> orders, Order order){
-        try {
-            boolean offerOk = orders.offer(order,1,TimeUnit.MINUTES);
-            if (!offerOk){
-                log.error("队列阻塞，添加到队列失败，请记录重试");
-            }
-        } catch (InterruptedException e) {
-            log.error("服务中断异常");
-        }
     }
 
     /**
@@ -86,9 +74,9 @@ public class OrderController {
      * @param orders 队列
      */
     private void doRunnable(BlockingQueue<Order> orders, boolean isLoop) {
-        if (isLoop){
+        if (isLoop) {
             taskExecutor.execute(new OrderRunnableLoop(orders));
-        }else {
+        } else {
             taskExecutor.execute(new OrderRunnable(orders));
         }
     }
